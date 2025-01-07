@@ -1,0 +1,25 @@
+@startuml
+actor Оператор
+participant MES
+participant Redis
+participant Database
+
+Оператор -> MES: Получить список товаров
+MES -> Redis: Запрос данных в кэше
+alt cahce-hit
+    Redis -> MES: Данные из кэша
+    MES -> Оператор: Список товаров
+else cahce-miss
+    MES -> Database: Запрос данных из бд
+    Database -> MES: Данные из бд
+    MES -> Оператор: Список заказов
+    MES -> Redis: Запись данных в кэш
+end
+
+
+
+Оператор -> MES: Взять заказ в работу
+MES -> Database: Запись новых данных
+MES -> Redis: Инвалидация данных
+
+@enduml
