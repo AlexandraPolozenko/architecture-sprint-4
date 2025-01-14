@@ -1,5 +1,6 @@
 @startuml
 actor Оператор
+participant RabbitMQ
 participant MES
 participant Redis
 participant Database
@@ -12,14 +13,20 @@ alt cahce-hit
 else cahce-miss
     MES -> Database: Запрос данных из бд
     Database -> MES: Данные из бд
+        MES -> Redis: Запись данных в кэш
     MES -> Оператор: Список заказов
-    MES -> Redis: Запись данных в кэш
 end
 
 
+alt update from operator
+    Оператор -> MES: Взять заказ в работу
+    MES -> Redis: Инвалидация данных
+    MES -> Database: Запись новых данных
 
-Оператор -> MES: Взять заказ в работу
-MES -> Database: Запись новых данных
-MES -> Redis: Инвалидация данных
+else update from rabbit
+    RabbitMQ -> MES: Обновить заказ
+    MES -> Redis: Инвалидация данных
+    MES -> Database: Запись новых данных
+end
 
 @enduml
